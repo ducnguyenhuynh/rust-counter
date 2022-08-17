@@ -9,25 +9,31 @@ use near_sdk::{log, near_bindgen};
 #[near_bindgen]
 #[derive(Default, BorshDeserialize, BorshSerialize)]
 pub struct Counter {
-    val: i8,
+    val: u16,
+    top_threshold: i8,
+    low_threshold: i8,
 }
 
 #[near_bindgen]
 impl Counter {
     /// Public method: Returns the counter value.
-    pub fn get_num(&self) -> i8 {
+    pub fn get_num(&self) -> u16 {
         return self.val;
     }
 
     /// Public method: Increment the counter.
     pub fn increment(&mut self) {
-        self.val += 1;
+        if self.val < self.top_threshold {
+            self.val += 1;
+        }
         log!("Increased number to {}", self.val);
     }
 
     /// Public method: Decrement the counter.
     pub fn decrement(&mut self) {
-        self.val -= 1;
+        if self.val > self.lower_threshold {
+            self.val -= 1;
+        }   
         log!("Decreased number to {}", self.val);
     }
 
@@ -35,6 +41,15 @@ impl Counter {
     pub fn reset(&mut self) {
         self.val = 0;
         log!("Reset counter to zero");
+    }
+
+    pub fn update_top_threshold(&mut self,  value: i8){
+        self.top_threshold = value
+        log!("Update top threshold to {}", self.top_threshold);
+    }
+    pub fn update_low_threshold(&mut self,  value: i8){
+        self.low_threshold = value
+        log!("Update low threshold to {}", self.low_threshold);
     }
 }
 
@@ -52,24 +67,38 @@ mod tests {
     #[test]
     fn increment() {
         // instantiate a contract variable with the counter at zero
-        let mut contract = Counter { val: 0 };
+        let mut contract = Counter { val: 0 , top_threshold: 0, low_threshold: 0};
         contract.increment();
         assert_eq!(1, contract.get_num());
     }
 
     #[test]
     fn decrement() {
-        let mut contract = Counter { val: 0 };
+        let mut contract = Counter { val: 0 , top_threshold: 0, low_threshold: 0};
         contract.decrement();
         assert_eq!(-1, contract.get_num());
     }
 
     #[test]
     fn increment_and_reset() {
-        let mut contract = Counter { val: 0 };
+        let mut contract = Counter { val: 0 , top_threshold: 0, low_threshold: 0};
         contract.increment();
         contract.reset();
         assert_eq!(0, contract.get_num());
+    }
+
+    #[test]
+    fn update_top_threshold() {
+        let mut contract = Counter { val: 0 , top_threshold: 0, low_threshold: 0};
+        contract.update_top_threshold(100)
+        contract.reset();
+    }
+    
+    #[test]
+    fn update_low_threshold() {
+        let mut contract = Counter { val: 0 , top_threshold: 0, low_threshold: 0};
+        contract.update_low_threshold(-100)
+        contract.reset();
     }
 
     #[test]
